@@ -6,13 +6,13 @@ samples:
     "224"
 background_sample: 
     "1018"
-background_reads_dir:
-    /home/ctmr/projects/iceman/samples/1018_Iceman
 samples_dir:
-    /home/ctmr/projects/iceman/samples/224_Iceman
+    /home/ctmr/projects/iceman/samples/
 
 bbduk_human_db_path:
     /home/ctmr/db/hg19
+bbduk_ref:
+    /home/ctmr/db/bbmap_resources/adapters.fa
 hg19_fasta:
     /home/ctmr/db/hg19/hg19_main_mask_ribo_animal_allplant_allfungus.fa
 

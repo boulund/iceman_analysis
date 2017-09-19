@@ -1,25 +1,75 @@
 # Snakefile for Iceman analysis
 # (c) Fredrik Boulund 2017
+# Edit config.yaml to conform to your system, 
+# then run with snakemake flags:
+# 	--snakefile path/to/Snakefile 
+# 	--configfile path/to/config.yaml
+#   --cores <to_your_liking>
+#
 
 
 
 rule all:
 	input:
-		expand('interleaved_background_reads/1018.interleaved.fq.gz'),
+		expand('qc_reads/{sample}_R{readnum}.fq.gz', sample=config["samples"], readnum=["1", "2"]),
+		expand('qc_reads/{background_sample}_R{readnum}.fq.gz', background_sample=config["background_sample"], readnum=["1", "2"]),
+		expand('interleaved_background_reads/{background_sample}.interleaved.fq.gz', background_sample=config["background_sample"]),
 		expand('filtered_human/{sample}_R{readnum}.human_filtered.fq.gz', sample=config["samples"], readnum=["1", "2"]),
 		expand('filtered_background/{sample}_R{readnum}.background_filtered.fq.gz', sample=config["samples"], readnum=["1", "2"]),
-		expand('merged_reads/{sample}.merged.fq.gz', sample=config["samples"]),
+		expand('merged_subtracted_reads/{sample}.merged_subtracted.fq.gz', sample=config["samples"]),
 		expand('mapDamage/{sample}/Fragmisincorporation_plot.pdf', sample=config["samples"]),
+
+
+rule qc_reads:
+	"""Run reads through BBDuk for QC."""
+	input:
+		in1 = config['samples_dir']+'{sample}_Iceman/{sample}_Iceman_R1.fastq.gz',
+		in2 = config['samples_dir']+'{sample}_Iceman/{sample}_Iceman_R2.fastq.gz',
+	output:
+		out1 = 'qc_reads/{sample}_R1.fq.gz',
+		out2 = 'qc_reads/{sample}_R2.fq.gz',
+		stats = 'qc_reads/{sample}/{sample}.stats.txt',
+		bhist = 'qc_reads/{sample}/{sample}.bhist.txt',
+		qhist = 'qc_reads/{sample}/{sample}.qhist.txt',
+		qchist = 'qc_reads/{sample}/{sample}.qchist.txt',
+		aqhist = 'qc_reads/{sample}/{sample}.aqhist.txt',
+		bqhist = 'qc_reads/{sample}/{sample}.bqhist.txt',
+		lhist = 'qc_reads/{sample}/{sample}.lhist.txt',
+		gchist = 'qc_reads/{sample}/{sample}.gchist.txt',
+	threads: 40
+	shell:
+		"""
+		bbduk.sh \
+			in1={input.in1} \
+			in2={input.in2} \
+			ref={config[bbduk_ref]} \
+			out1={output.out1} \
+			out2={output.out2} \
+			stats={output.stats} \
+			bhist={output.bhist} \
+			qhist={output.qhist} \
+			qchist={output.qchist} \
+			aqhist={output.aqhist} \
+			bqhist={output.bqhist} \
+			lhist={output.lhist} \
+			gchist={output.gchist} \
+			qtrim=rl \
+			trimq=20 \
+			ktrim=r \
+			k=25 \
+			mink=11 \
+			hdist=1 
+		"""
 
 
 rule interleave_background_reads:
 	"""Interleave reads from two paired end fastq into a single file."""
 	input:
-		in1 = config['background_reads_dir']+'/1018_Iceman_R1.fastq.gz',
-		in2 = config['background_reads_dir']+'/1018_Iceman_R2.fastq.gz',
+		in1 = 'qc_reads/{sample}_R1.fq.gz',
+		in2 = 'qc_reads/{sample}_R2.fq.gz',
 	output:
-		'interleaved_background_reads/1018.interleaved.fq.gz'
-	threads: 20
+		'interleaved_background_reads/{sample}.interleaved.fq.gz'
+	threads: 40
 	shell:
 		"""
 		reformat.sh \
@@ -33,13 +83,13 @@ rule interleave_background_reads:
 rule filter_human:
 	"""Filter (remove) human contamination."""
 	input:
-		read1 = config['samples_dir']+'/{sample}_Iceman_R1.fastq.gz',
-		read2 = config['samples_dir']+'/{sample}_Iceman_R2.fastq.gz',
+		read1 = 'qc_reads/{sample}_R1.fq.gz',
+		read2 = 'qc_reads/{sample}_R2.fq.gz',
 	output:
  		out_read1 = 'filtered_human/{sample}_R1.human_filtered.fq.gz',
 		out_read2 = 'filtered_human/{sample}_R2.human_filtered.fq.gz',
 		out_matched = 'filtered_human/{sample}_matched.human_filtered.sam.gz',
-	threads: 20
+	threads: 40
 	shell:
 		"""
 		bbmap.sh \
@@ -73,7 +123,7 @@ rule filter_background:
 	output:
 		out_read1 = 'filtered_background/{sample}_R1.background_filtered.fq.gz',
 		out_read2 = 'filtered_background/{sample}_R2.background_filtered.fq.gz',
-	threads: 20
+	threads: 40
 	shell:
 		"""
 		bbmap.sh \
@@ -103,8 +153,8 @@ rule merge_reads:
 		read1 = 'filtered_background/{sample}_R1.background_filtered.fq.gz',
 		read2 = 'filtered_background/{sample}_R2.background_filtered.fq.gz'
 	output:
-		'merged_reads/{sample}.merged.fq.gz'
-	threads: 20
+		'merged_subtracted_reads/{sample}.merged_subtracted.fq.gz'
+	threads: 40
 	shell:
 		"""
 		bbmerge.sh \
@@ -131,4 +181,12 @@ rule mapDamage:
 		"""
 		
 		
+rule metaphlan2:
+	"""Run MetaPhlAn2 on the merged subtracted reads."""
+	input:
+		reads = 'merged_subtracted_reads/{sample}.merged_subtracted.fq.gz'
+	output:
 		
+	shell:
+		"""
+		"""
