@@ -20,6 +20,40 @@ rule all:
         expand('subtracted_background/{sample}_R{readnum}.background_subtracted.fq.gz', sample=config["samples"], readnum=["1", "2"]),
         expand('merged_subtracted_reads/{sample}.merged_subtracted.fq.gz', sample=config["samples"]),
         expand('mapDamage/{sample}/Fragmisincorporation_plot.pdf', sample=config["samples"]),
+        expand('metaphlan2/metaphlan2_outputs/{sample}.metaphlan2.txt', sample=config["samples"]),
+        expand('metaphlan2/metaphlan2_outputs/pre/{sample}.metaphlan2.txt', sample=config["samples"]),
+        expand('metaphlan2/metaphlan2_outputs/pre/{background_sample}.metaphlan2.txt', background_sample=config["background_sample"]),
+
+
+rule assess_input_data_quality:
+    """Run reads through BBDuk for quality stats."""
+    input:
+        in1 = config['samples_dir']+'{sample}_Iceman/{sample}_Iceman_R1.fastq.gz',
+        in2 = config['samples_dir']+'{sample}_Iceman/{sample}_Iceman_R2.fastq.gz',
+    output:
+        stats =  'logs/input_read_quality/{sample}.stats.txt',
+        bhist =  'logs/input_read_quality/{sample}.bhist.txt',
+        qhist =  'logs/input_read_quality/{sample}.qhist.txt',
+        qchist = 'logs/input_read_quality/{sample}.qchist.txt',
+        aqhist = 'logs/input_read_quality/{sample}.aqhist.txt',
+        bqhist = 'logs/input_read_quality/{sample}.bqhist.txt',
+        lhist =  'logs/input_read_quality/{sample}.lhist.txt',
+        gchist = 'logs/input_read_quality/{sample}.gchist.txt',
+    threads: 40
+    shell:
+        """
+        bbduk.sh \
+            in1={input.in1} \
+            in2={input.in2} \
+            stats={output.stats} \
+            bhist={output.bhist} \
+            qhist={output.qhist} \
+            qchist={output.qchist} \
+            aqhist={output.aqhist} \
+            bqhist={output.bqhist} \
+            lhist={output.lhist} \
+            gchist={output.gchist} \
+        """
 
 
 rule qc_reads:
@@ -179,7 +213,7 @@ rule merge_subtracted_reads:
         read2 = 'subtracted_background/{sample}_R2.background_subtracted.fq.gz'
     output:
         'merged_subtracted_reads/{sample}.merged_subtracted.fq.gz'
-    threads: 40
+    threads: 20
     shell:
         """
         bbmerge.sh \
@@ -196,24 +230,25 @@ rule mapDamage:
         rules.filter_human.output.out_matched
     output:
         'mapDamage/{sample}/Fragmisincorporation_plot.pdf'
+    threads: 1
     shell:
         """
-        source activate mapDamage
         mapDamage \
             --input {input} \
             --reference {config[hg19_fasta]} \
-            --folder mapDamage/{wildcards.sample} \
+            --folder mapDamage/{wildcards.sample} 
         """
         
-        
-rule metaphlan2:
-    """Run MetaPhlAn2 on the merged subtracted reads."""
+
+rule metaphlan2_pre:
+    """Run MetaPhlAn2 on the QC reads."""
     input:
-        reads = 'merged_subtracted_reads/{sample}.merged_subtracted.fq.gz'
+        reads1 = 'qc_reads/{sample}_R1.fq.gz',
+        reads2 = 'qc_reads/{sample}_R2.fq.gz'
     output:
-        bowtie2out = 'metaphlan2/bowtie2_outputs/{sample}.bowtie2.bz2',
-        mpl_out = 'metaphlan2/metaphlan2_outputs/{sample}.metaphlan2.txt' 
-    threads: 40
+        bowtie2out = 'metaphlan2/bowtie2_outputs/pre/{sample}.bowtie2.bz2',
+        mpl_out = 'metaphlan2/metaphlan2_outputs/pre/{sample}.metaphlan2.txt' 
+    threads: 20
     shell:
         """
         metaphlan2.py \
@@ -221,7 +256,30 @@ rule metaphlan2:
             --bowtie2out {output.bowtie2out} \
             --input_type fastq \
             --mpa_pkl {config[mpa_pkl]} \
-            --bowtie2db {config[mpl_bowtie2db]} \
+            --bowtie2db {config[mpa_bowtie2db]} \
+            --sample_id pre_{wildcards.sample} \
+            {input.reads1},{input.reads2} \
+            {output.mpl_out}
+        """
+        
+
+rule metaphlan2:
+    """Run MetaPhlAn2 on the merged subtracted reads."""
+    input:
+        reads = 'merged_subtracted_reads/{sample}.merged_subtracted.fq.gz'
+    output:
+        bowtie2out = 'metaphlan2/bowtie2_outputs/{sample}.bowtie2.bz2',
+        mpl_out = 'metaphlan2/metaphlan2_outputs/{sample}.metaphlan2.txt' 
+    threads: 20
+    shell:
+        """
+        metaphlan2.py \
+            --nproc {threads} \
+            --bowtie2out {output.bowtie2out} \
+            --input_type fastq \
+            --mpa_pkl {config[mpa_pkl]} \
+            --bowtie2db {config[mpa_bowtie2db]} \
+            --sample_id {wildcards.sample} \
             {input.reads} \
             {output.mpl_out}
         """

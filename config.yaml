@@ -15,9 +15,9 @@ bbduk_ref:
     /home/ctmr/db/bbmap_resources/adapters.fa
 hg19_fasta:
     /home/ctmr/db/hg19/hg19_main_mask_ribo_animal_allplant_allfungus.fa
-mpl_pkl:
+mpa_pkl:
     /home/ctmr/db/metaphlan2/db_v20/mpa_v20_m200.pkl
-mpl_bowtie2db:
+mpa_bowtie2db:
     /home/ctmr/db/metaphlan2/db_v20/mpa_v20_m200
 
 
