@@ -13,6 +13,7 @@
 rule all:
     input:
         expand('qc_reads/{sample}_R{readnum}.fq.gz', sample=config["samples"], readnum=["1", "2"]),
+        expand('microbecensus/{sample}.microbecensus.txt', sample=config["samples"]),
         expand('qc_reads/{background_sample}_R{readnum}.fq.gz', background_sample=config["background_sample"], readnum=["1", "2"]),
         expand('merged_background_reads/{background_sample}.merged.fa.gz', background_sample=config["background_sample"]),
         expand('assembled_background_reads/{background_sample}.assembled.fa.gz', background_sample=config["background_sample"]),
@@ -23,6 +24,8 @@ rule all:
         expand('metaphlan2/metaphlan2_outputs/{sample}.metaphlan2.txt', sample=config["samples"]),
         expand('metaphlan2/metaphlan2_outputs/pre/{sample}.metaphlan2.txt', sample=config["samples"]),
         expand('metaphlan2/metaphlan2_outputs/pre/{background_sample}.metaphlan2.txt', background_sample=config["background_sample"]),
+        expand('logs/input_read_quality/{sample}.stats.txt', sample=config["samples"]),
+        expand('logs/input_read_quality/{background_sample}.stats.txt', background_sample=config["background_sample"]),
 
 
 rule assess_input_data_quality:
@@ -53,6 +56,27 @@ rule assess_input_data_quality:
             bqhist={output.bqhist} \
             lhist={output.lhist} \
             gchist={output.gchist} \
+        """
+
+
+rule average_genome_size:
+    """Run MicrobeCensus to estimate Average Genome Size and number of 
+    genome equivalents for use in normalization."""
+    input:
+        in1 = config['samples_dir']+'{sample}_Iceman/{sample}_Iceman_R1.fastq.gz',
+        in2 = config['samples_dir']+'{sample}_Iceman/{sample}_Iceman_R2.fastq.gz',
+    output:
+        'microbecensus/{sample}.microbecensus.txt'
+    log:
+        'logs/microbecensus/{sample}.microbecensus_log.txt'
+    threads: 8
+    shell:
+        """
+        run_microbe_census.py \
+            -t {threads} \
+            {input.in1},{input.in2} \
+            {output} \
+            > {log}
         """
 
 
