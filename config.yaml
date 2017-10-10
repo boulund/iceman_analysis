@@ -21,3 +21,5 @@ mpa_bowtie2db:
     /home/ctmr/db/metaphlan2/db_v20/mpa_v20_m200
 megares_fasta:
     /home/ctmr/db/MEGARes/latest/megares_database_v1.01.fasta
+megares_annotations:
+    /home/ctmr/db/MEGARes/latest/megares_annotations_v1.01.csv

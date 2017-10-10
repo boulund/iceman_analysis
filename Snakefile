@@ -353,8 +353,10 @@ rule map_antibiotic_resistance:
        covstats = 'megares/{sample}.megares.covstats.txt',
        rpkm = 'megares/{sample}.megares.rpkm.txt',
        basecov = 'megares/{sample}.megares.basecov.txt',
+       dataframe = 'megares/{sample}.megares.covstats.dataframe.csv',
     log:
-       'logs/megares/{sample}.megares.statsfile.txt'
+       statsfile = 'logs/megares/{sample}.megares.statsfile.txt',
+       count_matrix = 'logs/megares/{sample}.megares.dataframe.txt',
     threads: 40
     shell:
         """
@@ -369,6 +371,11 @@ rule map_antibiotic_resistance:
             covstats={output.covstats} \
             rpkm={output.rpkm} \
             basecov={output.basecov} \
-            statsfile={log} \
+            statsfile={log.statsfile} \
+        create_count_matrix.py \
+            {output.covstats} \
+            -o {output.dataframe} \
+            -a {config[megares_annotations]} \
+            > {log.count_matrix} 
         """
 
