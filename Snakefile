@@ -74,6 +74,7 @@ rule average_genome_size:
         """
         run_microbe_census.py \
             -t {threads} \
+            -v \
             {input.in1},{input.in2} \
             {output} \
             > {log}
