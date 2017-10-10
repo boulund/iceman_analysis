@@ -24,8 +24,11 @@ rule all:
         expand('metaphlan2/metaphlan2_outputs/{sample}.metaphlan2.txt', sample=config["samples"]),
         expand('metaphlan2/metaphlan2_outputs/pre/{sample}.metaphlan2.txt', sample=config["samples"]),
         expand('metaphlan2/metaphlan2_outputs/pre/{background_sample}.metaphlan2.txt', background_sample=config["background_sample"]),
-        expand('logs/input_read_quality/{sample}.stats.txt', sample=config["samples"]),
-        expand('logs/input_read_quality/{background_sample}.stats.txt', background_sample=config["background_sample"]),
+        expand('logs/input_read_quality/{sample}.input_read_quality.stats.txt', sample=config["samples"]),
+        expand('logs/input_read_quality/{background_sample}.input_read_quality.stats.txt', background_sample=config["background_sample"]),
+        expand('megares/{sample}.megares.covstats.txt', sample=config["samples"]),
+        expand('bbcountunique/{sample}.bbcountunique.histogram.txt', sample=config["samples"]),
+        expand('bbcountunique/{sample}.bbcountunique.histogram.pdf', sample=config["samples"]),
 
 
 rule assess_input_data_quality:
@@ -34,14 +37,14 @@ rule assess_input_data_quality:
         in1 = config['samples_dir']+'{sample}_Iceman/{sample}_Iceman_R1.fastq.gz',
         in2 = config['samples_dir']+'{sample}_Iceman/{sample}_Iceman_R2.fastq.gz',
     output:
-        stats =  'logs/input_read_quality/{sample}.stats.txt',
-        bhist =  'logs/input_read_quality/{sample}.bhist.txt',
-        qhist =  'logs/input_read_quality/{sample}.qhist.txt',
-        qchist = 'logs/input_read_quality/{sample}.qchist.txt',
-        aqhist = 'logs/input_read_quality/{sample}.aqhist.txt',
-        bqhist = 'logs/input_read_quality/{sample}.bqhist.txt',
-        lhist =  'logs/input_read_quality/{sample}.lhist.txt',
-        gchist = 'logs/input_read_quality/{sample}.gchist.txt',
+        stats =  'logs/input_read_quality/{sample}.input_read_quality.stats.txt',
+        bhist =  'logs/input_read_quality/{sample}.input_read_quality.bhist.txt',
+        qhist =  'logs/input_read_quality/{sample}.input_read_quality.qhist.txt',
+        qchist = 'logs/input_read_quality/{sample}.input_read_quality.qchist.txt',
+        aqhist = 'logs/input_read_quality/{sample}.input_read_quality.aqhist.txt',
+        bqhist = 'logs/input_read_quality/{sample}.input_read_quality.bqhist.txt',
+        lhist =  'logs/input_read_quality/{sample}.input_read_quality.lhist.txt',
+        gchist = 'logs/input_read_quality/{sample}.input_read_quality.gchist.txt',
     threads: 40
     shell:
         """
@@ -89,14 +92,14 @@ rule qc_reads:
     output:
         out1 = 'qc_reads/{sample}_R1.fq.gz',
         out2 = 'qc_reads/{sample}_R2.fq.gz',
-        stats =  'logs/qc_reads/{sample}.stats.txt',
-        bhist =  'logs/qc_reads/{sample}.bhist.txt',
-        qhist =  'logs/qc_reads/{sample}.qhist.txt',
-        qchist = 'logs/qc_reads/{sample}.qchist.txt',
-        aqhist = 'logs/qc_reads/{sample}.aqhist.txt',
-        bqhist = 'logs/qc_reads/{sample}.bqhist.txt',
-        lhist =  'logs/qc_reads/{sample}.lhist.txt',
-        gchist = 'logs/qc_reads/{sample}.gchist.txt',
+        stats =  'logs/qc_reads/{sample}.qc_reads.stats.txt',
+        bhist =  'logs/qc_reads/{sample}.qc_reads.bhist.txt',
+        qhist =  'logs/qc_reads/{sample}.qc_reads.qhist.txt',
+        qchist = 'logs/qc_reads/{sample}.qc_reads.qchist.txt',
+        aqhist = 'logs/qc_reads/{sample}.qc_reads.aqhist.txt',
+        bqhist = 'logs/qc_reads/{sample}.qc_reads.bqhist.txt',
+        lhist =  'logs/qc_reads/{sample}.qc_reads.lhist.txt',
+        gchist = 'logs/qc_reads/{sample}.qc_reads.gchist.txt',
     threads: 40
     shell:
         """
@@ -124,6 +127,28 @@ rule qc_reads:
         """
 
 
+rule assess_saturation:
+    """Count unique kmers to assess sequencing depth/saturation."""
+    input:
+        in1 = 'qc_reads/{sample}_R1.fq.gz',
+        in2 = 'qc_reads/{sample}_R2.fq.gz'
+    output:
+        histogram_data = 'bbcountunique/{sample}.bbcountunique.histogram.txt',
+        histogram_plot = 'bbcountunique/{sample}.bbcountunique.histogram.pdf',
+    log:
+        'logs/bbcountunique/{sample}.bbcountunique.stdout'
+    shell:
+        """
+        bbcountunique.sh \
+            in1={input.in1} \
+            in2={input.in2} \
+            out={output.histogram_data} \
+            > {log}
+        plot_bbcountunique.py \
+            {output.histogram_data} \
+            {output.histogram_plot} \
+        """
+
 rule merge_background_reads:
     """Merge background reads from two paired end fastq into a single file."""
     input:
@@ -149,7 +174,7 @@ rule assemble_background_reads:
     output:
         'assembled_background_reads/1018.assembled.fa.gz'
     log:
-        'assembled_background_reads/1018.assembly_stats.txt'
+        'logs/assembled_background_reads/1018.assembly_stats.txt'
     threads: 40
     shell:
         """
@@ -170,7 +195,8 @@ rule filter_human:
         out_read1 = 'filtered_human/{sample}_R1.human_filtered.fq.gz',
         out_read2 = 'filtered_human/{sample}_R2.human_filtered.fq.gz',
         out_matched = 'filtered_human/{sample}_matched.human_filtered.sam.gz',
-        statsfile = 'logs/filtered_human/{sample}.human_filtered.statsfile.txt'
+    log:
+        'logs/filtered_human/{sample}.human_filtered.statsfile.txt'
     threads: 40
     shell:
         """
@@ -206,7 +232,8 @@ rule subtract_background:
         out_read1 = 'subtracted_background/{sample}_R1.background_subtracted.fq.gz',
         out_read2 = 'subtracted_background/{sample}_R2.background_subtracted.fq.gz',
         out_matched = 'subtracted_background/{sample}.background_matched.fq.gz',
-        statsfile = 'logs/subtracted_background/{sample}.background_subtracted.statsfile.txt'
+    log:
+        'logs/subtracted_background/{sample}.background_subtracted.statsfile.txt'
     threads: 40
     shell:
         """
@@ -216,7 +243,7 @@ rule subtract_background:
             outu1={output.out_read1} \
             outu2={output.out_read2} \
             outm={output.out_matched} \
-            statsfile={output.statsfile} \
+            statsfile={log} \
             ref={input.background_reads} \
             build=2 \
             minid=0.95 \
@@ -238,6 +265,8 @@ rule merge_subtracted_reads:
         read2 = 'subtracted_background/{sample}_R2.background_subtracted.fq.gz'
     output:
         'merged_subtracted_reads/{sample}.merged_subtracted.fq.gz'
+    log:
+        'logs/merged_subtracted_reads/{sample}.merged_subtracted.stdout'
     threads: 20
     shell:
         """
@@ -245,7 +274,8 @@ rule merge_subtracted_reads:
             in1={input.read1} \
             in2={input.read2} \
             out={output} \
-            threads={threads}
+            threads={threads} \
+            > {log}
         """
 
 
@@ -255,13 +285,16 @@ rule mapDamage:
         rules.filter_human.output.out_matched
     output:
         'mapDamage/{sample}/Fragmisincorporation_plot.pdf'
+    log:
+        'logs/mapDamage/{sample}.mapDamage.stdout'
     threads: 1
     shell:
         """
         mapDamage \
             --input {input} \
             --reference {config[hg19_fasta]} \
-            --folder mapDamage/{wildcards.sample} 
+            --folder mapDamage/{wildcards.sample} \
+            > {log}
         """
         
 
@@ -308,3 +341,34 @@ rule metaphlan2:
             {input.reads} \
             {output.mpl_out}
         """
+
+
+rule map_antibiotic_resistance:
+    """Map quality filtered and subtracted reads to MEGARes."""
+    input:
+        reads = 'merged_subtracted_reads/{sample}.merged_subtracted.fq.gz'
+    output:
+       samfile = 'megares/{sample}.megares.sam',
+       scafstats = 'megares/{sample}.megares.scafstats.txt',
+       covstats = 'megares/{sample}.megares.covstats.txt',
+       rpkm = 'megares/{sample}.megares.rpkm.txt',
+       basecov = 'megares/{sample}.megares.basecov.txt',
+    log:
+       'logs/megares/{sample}.megares.statsfile.txt'
+    threads: 40
+    shell:
+        """
+        bbmap.sh \
+            ref={config[megares_fasta]} \
+            build=3 \
+            in={input.reads} \
+            minid=0.90 \
+            threads={threads} \
+            outm={output.samfile} \
+            scafstats={output.scafstats} \
+            covstats={output.covstats} \
+            rpkm={output.rpkm} \
+            basecov={output.basecov} \
+            statsfile={log} \
+        """
+
