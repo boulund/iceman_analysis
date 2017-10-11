@@ -107,7 +107,6 @@ rule qc_reads:
             in1={input.in1} \
             in2={input.in2} \
             ref={config[bbduk_ref]} \
-            build=1 \
             out1={output.out1} \
             out2={output.out2} \
             stats={output.stats} \
@@ -207,7 +206,7 @@ rule filter_human:
             out2={output.out_read2} \
             outm={output.out_matched} \
             path={config[bbduk_human_db_path]} \
-            statsfile={output.statsfile} \
+            statsfile={log} \
             minid=0.95 \
             maxindel=3 \
             minhits=2 \
