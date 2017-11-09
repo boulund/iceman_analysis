@@ -28,14 +28,15 @@ def plot_pmd(pmd, output_image):
     """
     sample_name = os.path.basename(pmd).split(".", maxsplit=1)[0]
     df = pd.read_table(pmd)
+
+    # Ugly hacks to fix errors in PMD deamination tab separated output
     df = df.iloc[:, :-1]
     df.columns = "CT       CA       CG       CC       GA       GT       GC  GG".split()
-    print(df)
 
     fig, ax  = plt.subplots(figsize=(10,7))
     df.plot(ax=ax)
     ax.set_title("{sample}\nPMDtools deamination estimates".format(sample=sample_name))
-    ax.set_xlabel("Position(?)")
+    ax.set_xlabel("z")
     ax.set_ylabel("Deamination")
     fig.savefig(output_image)
 

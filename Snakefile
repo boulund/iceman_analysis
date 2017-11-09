@@ -29,7 +29,7 @@ rule all:
         expand('megares/{sample}.megares.covstats.txt', sample=config["samples"]),
         expand('bbcountunique/{sample}.bbcountunique.histogram.txt', sample=config["samples"]),
         expand('bbcountunique/{sample}.bbcountunique.histogram.pdf', sample=config["samples"]),
-        expand('PMDtools/{sample}.deamination.txt', sample=config["samples"]),
+        expand('PMDtools/{sample}.deamination.pdf', sample=config["samples"]),
 
 
 rule assess_input_data_quality:
@@ -387,6 +387,7 @@ rule pmd_tools_ar:
         fillmd = 'PMDtools/{sample}.megares.fillmd.sam',
         bamfile = 'PMDtools/{sample}.pmds3filter.bam',
         deamination = 'PMDtools/{sample}.deamination.txt',
+        plot = 'PMDtools/{sample}.deamination.pdf',
     shell:
         """
         samtools fillmd {input.samfile} {config[megares_fasta]} > {output.fillmd}
@@ -399,4 +400,6 @@ rule pmd_tools_ar:
         samtools view {output.bamfile} \
             | {config[pmdtools_path]} --deamination --range 30 \
             > {output.deamination}
+
+        plot_pmd.py {output.deamination} {output.plot}
         """
