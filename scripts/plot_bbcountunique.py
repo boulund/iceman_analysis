@@ -34,6 +34,7 @@ def plot_histogram(histogram_data_file, output_image):
     ax.set_title("{sample}\nKmer saturation (BBCountUnique)".format(sample=sample_name))
     ax.set_xlabel("Sampled reads")
     ax.set_ylabel("Proportion novel kmers observed")
+    ax.set_ylim([0,100])
     fig.savefig(output_image)
 
 

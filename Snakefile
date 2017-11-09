@@ -29,6 +29,7 @@ rule all:
         expand('megares/{sample}.megares.covstats.txt', sample=config["samples"]),
         expand('bbcountunique/{sample}.bbcountunique.histogram.txt', sample=config["samples"]),
         expand('bbcountunique/{sample}.bbcountunique.histogram.pdf', sample=config["samples"]),
+        expand('PMDtools/{sample}.deamination.txt', sample=config["samples"]),
 
 
 rule assess_input_data_quality:
@@ -378,3 +379,24 @@ rule map_antibiotic_resistance:
             > {log.count_matrix} 
         """
 
+rule pmd_tools_ar:
+    """Use PMD tools to remove modern contamination from AR-mappings."""
+    input:
+        samfile = 'megares/{sample}.megares.sam'
+    output:
+        fillmd = 'PMDtools/{sample}.megares.fillmd.sam',
+        bamfile = 'PMDtools/{sample}.pmds3filter.bam',
+        deamination = 'PMDtools/{sample}.deamination.txt',
+    shell:
+        """
+        samtools fillmd {input.samfile} {config[megares_fasta]} > {output.fillmd}
+        
+        samtools view -h {output.fillmd} \
+            | {config[pmdtools_path]} --threshold 3 --header \
+            | samtools view -Sb - \
+            > {output.bamfile}
+
+        samtools view {output.bamfile} \
+            | {config[pmdtools_path]} --deamination --range 30 \
+            > {output.deamination}
+        """
