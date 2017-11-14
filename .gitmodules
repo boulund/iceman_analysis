@@ -1,0 +1,3 @@
+[submodule "libs/TIGRFAM_scripts"]
+	path = libs/TIGRFAM_scripts
+	url = https://github.com/boulund/TIGRFAM_scripts.git
