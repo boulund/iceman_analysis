@@ -25,6 +25,10 @@ these to be available in the running environment (i.e. to be in `$PATH`).
 * MicrobeCensus, for average genome size estimation
 * mapDamage, assess ancient DNA indications
 
+Some additional custom tools are available in the `scripts` directory, all of
+which are written for Python 3.6+, and some require standard scientific packages 
+such as Pandas and Matplotlib. 
+
 ## Databases
 * MEGARes, database of antibiotic resistance genes
 * TIGRFAMs, database of protein families 
