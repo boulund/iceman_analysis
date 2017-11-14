@@ -1,4 +1,47 @@
 # Analysis of Iceman samples
 Analysis of samples from the Iceman.
 
-Snakemake workflow designed to be used with a reference background sample, in this case a lung tissue sample (1018). The primary sample, a gut sample is sample 224.
+Snakemake workflow designed to be used with a reference background sample, in
+this case a lung tissue sample (1018). The reference background sample is 
+(unfortunately) hardcoded in some of the workflow steps, because of some Snakemake
+quirk I don't understand. The primary sample, a gut sample, is sample 224.
+
+# Dependencies
+The workflow uses several third-party tools and databases, and expects all of
+these to be available in the running environment (i.e. to be in `$PATH`).
+
+## Tools
+* BBMap (and several other BBTools):
+ - `bbduk.sh`, quality filtering, adapter trimming, etc.
+ - `bbcountunique.sh`, assess kmer saturation
+ - `bbmerge.sh`, read merging
+ - `bbmap.sh`, read mapping
+ - `tadpole.sh`, assembly
+ - `translate6frames.sh`, six-frame translation
+ - `pileup.sh`, coverage statistics
+* HMMER3, for TIGRFAM annotation
+* PMDTools, for filtering ancient reads
+* MetaPhlAn2, for taxonomic profiling
+* MicrobeCensus, for average genome size estimation
+* mapDamage, assess ancient DNA indications
+
+## Databases
+* MEGARes, database of antibiotic resistance genes
+* TIGRFAMs, database of protein families 
+
+# Download and run
+Get the workflow by cloning this repository:
+
+```
+git clone --recursive https://github.com/boulund/iceman_analysis.git
+```
+
+This will produce a folder called `iceman_analysis` in your current directory. Edit `config.yaml` so that
+all paths are correct for your system/environment. Then run the pipeline:
+
+```
+snakemake --snakefile /path/to/iceman_analysis/Snakefile --configfile /path/to/iceman_analysis/config.yaml --jobs <N> 
+```
+
+Set the number of jobs (`N`) to the number of available CPU cores to maximize parallelization potential. 
+
