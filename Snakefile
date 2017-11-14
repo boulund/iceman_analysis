@@ -30,6 +30,7 @@ rule all:
         expand('bbcountunique/{sample}.bbcountunique.histogram.txt', sample=config["samples"]),
         expand('bbcountunique/{sample}.bbcountunique.histogram.pdf', sample=config["samples"]),
         expand('PMDtools/{sample}.deamination.pdf', sample=config["samples"]),
+        expand('PMDtools/{sample}.covstats.txt', sample=config["samples"]),
 
 
 rule assess_input_data_quality:
@@ -388,6 +389,7 @@ rule pmd_tools_ar:
         bamfile = 'PMDtools/{sample}.pmds3filter.bam',
         deamination = 'PMDtools/{sample}.deamination.txt',
         plot = 'PMDtools/{sample}.deamination.pdf',
+        covstats = 'PMDtools/{sample}.covstats.txt',
     shell:
         """
         samtools fillmd {input.samfile} {config[megares_fasta]} > {output.fillmd}
@@ -402,4 +404,10 @@ rule pmd_tools_ar:
             > {output.deamination}
 
         plot_pmd.py {output.deamination} {output.plot}
+
+        pileup.sh \
+            in={output.bamfile} \
+            ref={config[megares_fasta]} \
+            out={output.covstats} 
+
         """
