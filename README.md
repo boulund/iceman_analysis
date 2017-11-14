@@ -44,7 +44,7 @@ This will produce a folder called `iceman_analysis` in your current directory. E
 all paths are correct for your system/environment. Then run the pipeline:
 
 ```
-snakemake --snakefile /path/to/iceman_analysis/Snakefile --configfile /path/to/iceman_analysis/config.yaml --jobs <N> 
+snakemake --snakefile /path/to/iceman_analysis/Snakefile --configfile /path/to/iceman_analysis/config.yaml --jobs N
 ```
 
 Set the number of jobs (`N`) to the number of available CPU cores to maximize parallelization potential. 
