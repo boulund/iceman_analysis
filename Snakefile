@@ -152,6 +152,7 @@ rule assess_saturation:
             {output.histogram_plot} \
         """
 
+
 rule merge_background_reads:
     """Merge background reads from two paired end fastq into a single file."""
     input:
@@ -181,11 +182,14 @@ rule assemble_background_reads:
     threads: 40
     shell:
         """
-        tadpole.sh \
-            in={input} \
-            out={output} \
-            -Xmx60g \
-            > {log}
+        megahit \
+            --read {input} \
+            -o assembly_out \
+            --presets meta-large \
+            --num-cpu-threads {threads} \
+            > {log} \
+        && gzip -C assembly_out/final.contigs.fa > {output} \
+        && stats.sh in={output} out={log}
         """
 
 
@@ -374,7 +378,7 @@ rule map_antibiotic_resistance:
             covstats={output.covstats} \
             rpkm={output.rpkm} \
             basecov={output.basecov} \
-            statsfile={log.statsfile} \
+            statsfile={log.statsfile} 
         create_count_matrix.py \
             {output.covstats} \
             -o {output.dataframe} \
