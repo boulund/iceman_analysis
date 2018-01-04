@@ -25,3 +25,7 @@ megares_annotations:
     /home/ctmr/db/MEGARes/latest/megares_annotations_v1.01.csv
 pmdtools_path:
     /home/fredrik.boulund/code/PMDtools/pmdtools.py
+tigrfams_lib:
+    /home/ctmr/db/TIGRFAMs/latest/LIB/TIGRFAMs_15.0_HMM.LIB
+tigrfam_cutoffs:
+    /home/ctmr/db/TIGRFAMs/latest/TIGRFAM_cutoffs.tsv

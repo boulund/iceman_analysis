@@ -27,10 +27,12 @@ rule all:
         expand('logs/input_read_quality/{sample}.input_read_quality.stats.txt', sample=config["samples"]),
         expand('logs/input_read_quality/{background_sample}.input_read_quality.stats.txt', background_sample=config["background_sample"]),
         expand('megares/{sample}.megares.covstats.txt', sample=config["samples"]),
+        expand('megares/{sample}.vars.vcf', sample=config["samples"]),
         expand('bbcountunique/{sample}.bbcountunique.histogram.txt', sample=config["samples"]),
         expand('bbcountunique/{sample}.bbcountunique.histogram.pdf', sample=config["samples"]),
         expand('PMDtools/{sample}.deamination.pdf', sample=config["samples"]),
         expand('PMDtools/{sample}.covstats.txt', sample=config["samples"]),
+        #expand('tigrfam_annotations/{sample}.tigrfam_counts.tsv', sample=config["samples"]),
 
 
 rule assess_input_data_quality:
@@ -380,6 +382,28 @@ rule map_antibiotic_resistance:
             > {log.count_matrix} 
         """
 
+
+rule call_AR_variants:
+    """Call variants in mapped AR genes."""
+    input:
+        megares_sam = 'megares/{sample}.megares.sam'
+    output:
+        vcf = 'megares/{sample}.vars.vcf'
+    log:
+        stdout = 'logs/megares/{sample}.callvariants.stdout',
+        stderr = 'logs/megares/{sample}.callvariants.stderr'
+    threads: 2
+    shell:
+        """
+        callvariants.sh \
+            in={input.megares_sam} \
+            out={output.vcf} \
+            ref={config[megares_fasta]} \
+            > {log.stdout} \
+            2> {log.stderr}
+        """
+
+
 rule pmd_tools_ar:
     """Use PMD tools to remove modern contamination from AR-mappings."""
     input:
@@ -411,3 +435,44 @@ rule pmd_tools_ar:
             out={output.covstats} 
 
         """
+
+
+rule translate_merged_subtracted:
+    """Translate merged_subtracted reads into six reading frames."""
+    input:
+        merged_reads = 'merged_subtracted_reads/{sample}.merged_subtracted.fq.gz'
+    output:
+        sixframes = 'merged_subtracted_reads/{sample}.merged_subtracted.6frames.fa'
+    shell:
+        """
+        translate6frames.sh \
+            in={input.merged_reads} \
+            out={output.sixframes} 
+        """
+
+
+rule tigfram_annotations:
+    """Count TIGRFAM annotations."""
+    input:
+        sixframes = 'merged_subtracted_reads/{sample}.merged_subtracted.6frames.fa'
+    output:
+        hmmsearch_table = 'tigrfam_annotations/{sample}.hmmsearch_table.txt',
+        hmmsearch_stdout = 'tigrfam_annotations/{sample}.hmmsearch_stdout.txt',
+        tigrfam_counts = 'tigrfam_annotations/{sample}.tigrfam_counts.tsv',
+    threads: 40
+    shell:
+        """
+        hmmsearch \
+            --cpu {threads} \
+            --seed 1337 \
+            --tblout {output.hmmsearch_table} \
+            {config[tigrfams_lib]} \
+            {input.sixframes} \
+            > {output.hmmsearch_stdout} \
+        && \
+        count_tigrfam_annotations.py \
+            --tbl {output.hmmsearch_table} \
+            --cutoffs {config[tigrfam_cutoffs]} \
+            --output {output.tigrfam_counts}
+        """
+
