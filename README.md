@@ -49,3 +49,19 @@ snakemake --snakefile /path/to/iceman_analysis/Snakefile --configfile /path/to/i
 
 Set the number of jobs (`N`) to the number of available CPU cores to maximize parallelization potential. 
 
+
+
+# Tunapuco_Matses
+In the folder `tunapuco_matses` is a self-contained workflow for running
+similar analyses of another dataset intended for comparison with the Iceman
+data. 
+
+To run the Tunapuco_Matses workflow, configure relevant paths and the input
+filename pattern in the `config.yaml` for that workflow, then run:
+
+```
+snakemake --use-conda --jobs N
+```
+
+to run the entire workflow for all samples found in the defined input folder. The workflow
+uses [conda](www.conda.io) to make the workflow easier to reproduce.

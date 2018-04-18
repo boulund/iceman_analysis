@@ -1,0 +1,46 @@
+# Snakemake config for metagenomic analysis
+# Intended for use on CTMR-NAS
+# (c) Fredrik Boulund 2017
+
+inputdir: /home/ctmr/projects/043_iceman/samples_other/Tunapuco_Matses
+input_fn_pattern: "{sample}_{readpair}.fastq.gz"
+outputdir: /home/ctmr/projects/043_iceman/analyses/Tunapuco_Matses
+
+
+hg19_fasta: /db/hg19/hg19_main_mask_ribo_animal_allplant_allfungus.fa
+remove_human:
+    hg19_path: "/db/hg19"         # [Required] Path to folder containing the BBMap index for hg19
+    minid: 0.95
+    maxindel: 3
+    minhits: 2
+    bandwidthratio: 0.16
+    bandwidth: 12
+    qtrim: "rl"
+    trimq: 10
+    quickmatch: "quickmatch"
+    fast: "fast"
+    untrim: "untrim"
+metaphlan2:
+    mpa_pkl: "/db/metaphlan2/db_v20/mpa_v20_m200.pkl"          # [Required] Path to MetaPhlAn2 pickle file: mpa_v20_m200.pkl
+    bt2_db_prefix: "/db/metaphlan2/db_v20/mpa_v20_m200"    # [Required] Path to MetaPhlAn2 Bowtie2 index prefix: /path/to/mpa_v20_m200 (no file extension)
+    extra: ""            # Extra command line arguments for metaphlan2.py
+    tax_lev: "s"         # Heatmap: Taxononomic level, choose from a, k, p, c, f, g, s
+    minv: "0"            # Heatmap: Minimum value to display.
+    s: "log"             # Heatmap: Scale, default is "norm"
+    top: "50"            # Heatmap: Top most abundant taxa to display
+    m: "average"         # Heatmap: Hierarchical clustering method.
+    d: "braycurtis"      # Heatmap: Distance function for samples.
+    f: "correlation"     # Heatmap: Distance function for microbes.
+    c: "jet"             # Heatmap: Colormap, default is "jet"
+kaiju:
+    db: "/db/kaiju/latest/kaiju_db.fmi"               # Path to Kaiju DB file
+    nodes: "/db/kaiju/latest/nodes.dmp"            # Path to Kaiju taxonomy nodes.dmp
+    names: "/db/kaiju/latest/names.dmp"            # Path to Kaiju taxonomy names.dmp
+megares:
+    fasta: /db/MEGARes/latest/megares_database_v1.01.fasta
+    annotations: /db/MEGARes/latest/megares_annotations_v1.01.csv
+pmdtools: /home/fredrik.boulund/code/PMDtools/pmdtools.py
+tigrfams_lib:
+    /home/ctmr/db/TIGRFAMs/latest/LIB/TIGRFAMs_15.0_HMM.LIB
+tigrfam_cutoffs:
+    /home/ctmr/db/TIGRFAMs/latest/TIGRFAM_cutoffs.tsv

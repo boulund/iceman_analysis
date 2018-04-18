@@ -1,0 +1,30 @@
+# Snakefile for analysis of Tunapuco and Matses metagenomes
+# vim: syntax=python expandtab
+# (c) Fredrik Boulund 2018
+# Edit config.yaml to conform to your system, 
+# then run with snakemake flags:
+#     --snakefile path/to/<this_file>
+#     --configfile path/to/config.yaml
+#     --cores <to_your_liking>
+from os.path import join as joinpath
+
+configfile: "config.yaml"
+INDIR = config["inputdir"]
+OUTDIR = config["outputdir"]
+SAMPLES = set(glob_wildcards(joinpath(INDIR, config["input_fn_pattern"])).sample)
+all_outputs = []
+
+
+include: "rules/preprocessing/read_quality.smk"
+include: "rules/preprocessing/remove_human.smk"
+include: "rules/ancient_dna/mapdamage.smk"
+include: "rules/taxonomic_profiling/metaphlan2.smk"
+include: "rules/taxonomic_profiling/kaiju.smk"
+include: "rules/assembly/megahit.smk"
+#include: "rules/assembly/binning.smk"
+#include: "rules/assembly/functional_profiling.smk"
+
+
+rule all:
+    input:
+        all_outputs
