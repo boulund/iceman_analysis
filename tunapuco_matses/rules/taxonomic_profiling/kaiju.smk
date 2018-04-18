@@ -46,6 +46,7 @@ rule kaiju:
         read2=joinpath(OUTDIR, "filtered_human", "{sample}_2.filtered_human.fq.gz"),
     output:
         kaiju=joinpath(OUTDIR, "kaiju", "{sample}.kaiju"),
+    log: joinpath(OUTDIR, "logs", "kaiju", "{sample}.kaiju.log")
     shadow: "shallow"
     threads: 4
     conda: "../../envs/iceman.yaml"
@@ -71,7 +72,7 @@ rule kaiju:
                 -i {input.read1} \
                 -j {input.read2} \
                 -o {output.kaiju}
-        fi
+        fi > {log}
         """
 
 

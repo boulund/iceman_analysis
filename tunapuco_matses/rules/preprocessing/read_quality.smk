@@ -37,15 +37,16 @@ rule qc_reads:
     output:
         out1 = joinpath(OUTDIR, 'qc_reads', '{sample}_1.fq.gz'),
         out2 = joinpath(OUTDIR, 'qc_reads', '{sample}_2.fq.gz'),
-        stats =  'logs/qc_reads/{sample}.qc_reads.stats.txt',
-        bhist =  'logs/qc_reads/{sample}.qc_reads.bhist.txt',
-        qhist =  'logs/qc_reads/{sample}.qc_reads.qhist.txt',
-        qchist = 'logs/qc_reads/{sample}.qc_reads.qchist.txt',
-        aqhist = 'logs/qc_reads/{sample}.qc_reads.aqhist.txt',
-        bqhist = 'logs/qc_reads/{sample}.qc_reads.bqhist.txt',
-        lhist =  'logs/qc_reads/{sample}.qc_reads.lhist.txt',
-        gchist = 'logs/qc_reads/{sample}.qc_reads.gchist.txt',
-    log: joinpath(OUTDIR, "logs", "qc_reads", "{sample}.bbduk.log")
+        stats =  joinpath(OUTDIR, "logs", "qc_reads", "{sample}.qc_reads.stats.txt"),
+        bhist =  joinpath(OUTDIR, "logs", "qc_reads", "{sample}.qc_reads.bhist.txt"),
+        qhist =  joinpath(OUTDIR, "logs", "qc_reads", "{sample}.qc_reads.qhist.txt"),
+        qchist = joinpath(OUTDIR, "logs", "qc_reads", "{sample}.qc_reads.qchist.txt"),
+        aqhist = joinpath(OUTDIR, "logs", "qc_reads", "{sample}.qc_reads.aqhist.txt"),
+        bqhist = joinpath(OUTDIR, "logs", "qc_reads", "{sample}.qc_reads.bqhist.txt"),
+        lhist =  joinpath(OUTDIR, "logs", "qc_reads", "{sample}.qc_reads.lhist.txt"),
+        gchist = joinpath(OUTDIR, "logs", "qc_reads", "{sample}.qc_reads.gchist.txt"),
+    log: 
+        joinpath(OUTDIR, "logs", "qc_reads", "{sample}.bbduk.log")
     threads: 20
     conda: "../../envs/iceman.yaml"
     shell:
@@ -82,7 +83,7 @@ rule assess_saturation:
         histogram_data = joinpath(OUTDIR, 'bbcountunique', '{sample}.bbcountunique.histogram.txt'),
         histogram_plot = joinpath(OUTDIR, 'bbcountunique', '{sample}.bbcountunique.histogram.pdf'),
     log:
-        joinpath(OUTDIR, 'logs/bbcountunique/{sample}.bbcountunique.stdout')
+        joinpath(OUTDIR, "logs", "bbcountunique", "{sample}.bbcountunique.stdout.log")
     conda: "../../envs/iceman.yaml"
     threads: 8
     shell:
